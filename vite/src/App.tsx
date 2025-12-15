@@ -1,6 +1,7 @@
 import { Routes, Route, Link } from "react-router-dom";
 import { HealthCheck } from "./pages/HealthCheck";
 import { Home } from "./pages/Home";
+import { Status } from "./pages/Status";
 
 function App() {
   return (
@@ -13,11 +14,15 @@ function App() {
           <Link to="/health" className="text-gray-300 hover:text-white transition-colors">
             Health
           </Link>
+          <Link to="/status" className="text-gray-300 hover:text-white transition-colors">
+            Status
+          </Link>
         </div>
       </nav>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/health" element={<HealthCheck />} />
+        <Route path="/status" element={<Status />} />
       </Routes>
     </div>
   );
