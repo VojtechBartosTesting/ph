@@ -1,0 +1,71 @@
+services:
+  postgres-fastapi:
+    image: postgres:16
+    container_name: ph-postgres-fastapi
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ph
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_fastapi_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-flask:
+    image: postgres:16
+    container_name: ph-postgres-flask
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ph_flask
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_flask_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  fastapi:
+    build:
+      context: ./fastapi
+      dockerfile: Dockerfile
+    container_name: ph-fastapi
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres-fastapi:5432/ph
+    volumes:
+      - ./fastapi:/app
+    depends_on:
+      postgres-fastapi:
+        condition: service_healthy
+    command: sh -c "uv run alembic upgrade head && uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+
+  flask:
+    build:
+      context: ./flask
+      dockerfile: Dockerfile
+    container_name: ph-flask
+    ports:
+      - "5001:5001"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres-flask:5432/ph_flask
+    volumes:
+      - ./flask:/app
+    depends_on:
+      postgres-flask:
+        condition: service_healthy
+    command: sh -c "uv run alembic upgrade head && uv run gunicorn --reload --bind 0.0.0.0:5001 main:app"
+
+volumes:
+  postgres_fastapi_data:
+  postgres_flask_data:
+
