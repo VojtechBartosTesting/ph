@@ -1,3 +1,4 @@
+i am user B
 i am user A
 
 # Contributing
